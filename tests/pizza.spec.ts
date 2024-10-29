@@ -1,6 +1,7 @@
+import { Page } from "@playwright/test";
 import { test, expect } from "playwright-test-coverage";
 
-async function loginInterceptor(page) {
+async function loginInterceptor(page: Page) {
   await page.route("*/**/api/auth", async (route) => {
     const loginReq = { email: "d@jwt.com", password: "a" };
     const loginRes = {
@@ -140,7 +141,22 @@ test("purchase with login", async ({ page }) => {
   // Check balance
   await expect(page.getByText("0.008")).toBeVisible();
 
+  await page.route("*/**/api/order/verify", async (route) => {
+    const verify = { jwt: "eyJpYXQ" };
+    const verifyRes = { message: "valid", payload: "eyJpYXQ" };
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject(verify);
+    await route.fulfill({ json: verifyRes });
+  });
+
+  // Verify order
+  await expect(page.getByRole("button", { name: "Verify" })).toBeVisible();
+  await page.getByRole("button", { name: "Verify" }).click();
+
+  await page.getByRole("button", { name: "Close" }).click();
+
   // go to dashboard
+
   await page.getByRole("link", { name: "KC" }).click();
 });
 
@@ -159,12 +175,18 @@ test("go to history page", async ({ page }) => {
   await expect(page.getByText("Mama Rucci, my my")).toBeVisible();
 });
 
+test("go to notFound page", async ({ page }) => {
+  await page.goto("http://localhost:5173/404");
+  await expect(page.getByText("Oops")).toBeVisible();
+});
+
 test("go to docs page", async ({ page }) => {
   await page.route("*/**/api/docs", async (route) => {
     const docsRes = {
       version: "1.0.0",
       endpoints: [
         {
+          requiresAuth: false,
           method: "POST",
           path: "/api/auth",
           description: "Register a new user",
@@ -178,6 +200,23 @@ test("go to docs page", async ({ page }) => {
             },
             token: "tttttt",
           },
+        },
+        {
+          requiresAuth: true,
+          method: "GET",
+          path: "/api/franchise",
+          description: "Get all franchises",
+          example: `curl -X GET localhost:3000/api/franchise -H 'Authorization Bearer tttttt'`,
+          response: [
+            {
+              id: 2,
+              name: "lotsa pizza",
+              stores: [
+                { id: 1, name: "Lehi", totalRevenue: 5000 },
+                { id: 2, name: "Springville", totalRevenue: 3000 },
+              ],
+            },
+          ],
         },
       ],
       config: {
@@ -194,7 +233,7 @@ test("go to docs page", async ({ page }) => {
   await expect(page.getByText("JWT Pizza API")).toBeVisible();
 });
 
-async function franchiseSetup(page) {
+async function franchiseSetup(page: Page) {
   await page.route("*/**/api/auth", async (route) => {
     const loginReq = { email: "f@jwt.com", password: "b" };
     const loginRes = {
@@ -409,7 +448,7 @@ test("logout", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Login" })).toBeVisible();
 });
 
-async function setUpAdmin(page) {
+async function setUpAdmin(page: Page) {
   await page.route("*/**/api/auth", async (route) => {
     const loginReq = { email: "a@jwt.com", password: "a" };
     const loginRes = {
