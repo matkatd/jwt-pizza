@@ -156,7 +156,7 @@ test("purchase with login", async ({ page }) => {
   await page.getByRole("button", { name: "Close" }).click();
 
   // go to dashboard
-
+  await expect(page.getByRole("link", { name: "KC" })).toBeVisible();
   await page.getByRole("link", { name: "KC" }).click();
 });
 
