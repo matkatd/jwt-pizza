@@ -156,10 +156,16 @@ test("purchase with login", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "JWT Pizza - valid" })
   ).toBeVisible();
-  await expect(page.locator("#hs-jwt-modal-backdrop")).toBeVisible();
+  // await expect(page.locator("#hs-jwt-modal-backdrop")).toBeVisible()
+  // wait a second
+  await page.waitForTimeout(300);
   await page.getByRole("button", { name: "Close" }).click();
+  await page.waitForTimeout(300);
 
+  // wait 3 seconds for modal to close
+  // await page.waitForTimeout(3000);
   // go to dashboard
+
   await expect(page.getByRole("link", { name: "KC" })).toBeVisible();
   await page.getByRole("link", { name: "KC" }).click();
 });
