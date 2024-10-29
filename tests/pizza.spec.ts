@@ -153,6 +153,10 @@ test("purchase with login", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Verify" })).toBeVisible();
   await page.getByRole("button", { name: "Verify" }).click();
 
+  await expect(
+    page.getByRole("heading", { name: "JWT Pizza - valid" })
+  ).toBeVisible();
+  await expect(page.locator("#hs-jwt-modal-backdrop")).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
 
   // go to dashboard
